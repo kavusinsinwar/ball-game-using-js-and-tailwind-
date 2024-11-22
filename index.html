@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Falling Objects Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #ff7e5f, #feb47b);
+            height: 100vh;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        #basket {
+            width: 100px;
+            height: 30px;
+            background-color: #ff4081;
+            position: absolute;
+            bottom: 10px;
+            border-radius: 10px;
+            transition: transform 0.1s ease;
+        }
+
+        .falling-object {
+            width: 40px;
+            height: 40px;
+            background-color: #32cd32;
+            position: absolute;
+            border-radius: 50%;
+            transition: top 0.2s linear;
+        }
+
+        #score {
+            font-size: 2rem;
+            color: white;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-weight: bold;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #game-over {
+            font-size: 3rem;
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center relative">
+
+    <!-- Score Display -->
+    <div id="score">Score: 0</div>
+
+    <!-- Game Over Message -->
+    <div id="game-over">Game Over!</div>
+
+    <!-- Basket -->
+    <div id="basket" class="rounded-lg shadow-lg"></div>
+
+    <script>
+        let score = 0;
+        let isGameOver = false;
+        const basket = document.getElementById('basket');
+        const scoreDisplay = document.getElementById('score');
+        const gameOverDisplay = document.getElementById('game-over');
+        const gameWidth = window.innerWidth;
+        const gameHeight = window.innerHeight;
+
+        // Basket position
+        let basketPosition = (gameWidth - 100) / 2;
+        basket.style.left = `${basketPosition}px`;
+
+        // Move basket with arrow keys
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && basketPosition > 0) {
+                basketPosition -= 20;
+                basket.style.left = `${basketPosition}px`;
+            } else if (e.key === 'ArrowRight' && basketPosition < gameWidth - 100) {
+                basketPosition += 20;
+                basket.style.left = `${basketPosition}px`;
+            }
+        });
+
+        // Create falling objects
+        function createFallingObject() {
+            const obj = document.createElement('div');
+            obj.classList.add('falling-object', 'transition-all', 'duration-300');
+            const startX = Math.floor(Math.random() * (gameWidth - 40)); // Random X position for the object
+            obj.style.left = `${startX}px`;
+            obj.style.top = '0px'; // Start from the top
+            document.body.appendChild(obj);
+
+            let objectPosition = 0;
+            const fallSpeed = 5; // Speed of the object falling
+            const fallInterval = setInterval(() => {
+                if (!isGameOver) {
+                    objectPosition += fallSpeed;
+                    obj.style.top = `${objectPosition}px`;
+
+                    // Check if the object reaches the basket area
+                    if (objectPosition >= gameHeight - 60 && objectPosition <= gameHeight - 30) {
+                        const objLeft = parseInt(obj.style.left, 10);
+                        if (objLeft >= basketPosition && objLeft <= basketPosition + 100) {
+                            score++;
+                            scoreDisplay.textContent = `Score: ${score}`;
+                            obj.remove();
+                            clearInterval(fallInterval);
+                        }
+                    }
+
+                    // Game Over if object reaches the bottom without being caught
+                    if (objectPosition >= gameHeight) {
+                        clearInterval(fallInterval);
+                        obj.remove();
+                        if (!isGameOver) {
+                            isGameOver = true;
+                            gameOverDisplay.style.opacity = 1;
+                        }
+                    }
+                }
+            }, 20);
+        }
+
+        // Start the game loop for generating falling objects
+        setInterval(() => {
+            if (!isGameOver) {
+                createFallingObject();
+            }
+        }, 1500);
+
+        // Restart game on any key press after game over
+        document.addEventListener('keydown', (e) => {
+            if (isGameOver) {
+                score = 0;
+                isGameOver = false;
+                scoreDisplay.textContent = `Score: ${score}`;
+                gameOverDisplay.style.opacity = 0;
+            }
+        });
+    </script>
+</body>
+</html>
